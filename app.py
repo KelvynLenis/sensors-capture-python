@@ -1,15 +1,10 @@
-from fastapi import FastAPI, UploadFile, File
-import tempfile
-from pydantic import BaseModel
-from typing import List
+from fastapi import FastAPI
 import os
 import json
 from ASAnalyzer.utils import load_raw_file
 from imu_to_asanalyzer_txt import process_imu_txt
 
-import math
 from ASAnalyzer import ASAnalyzer
-from audio_adapter import wav_to_raw_matrix
 from analyzer import AudioAnalyzerService
 
 app = FastAPI()
@@ -20,67 +15,9 @@ DEFAULT_TEST_FILE = "state_data.json"
 app = FastAPI()
 analyser = ASAnalyzer()
 
-WINDOW_SIZE = 5
 WINDOW = 5
 
-# v1.0.0
-
-def init_analyser_buffers(analyser):
-    analyser.raw = []
-    analyser.delta = []
-
-    analyser.est_d = []
-    analyser.obs_d = []
-
-    analyser.est_p = []
-    analyser.obs_p = []
-
-def update_internal_states(analyser, state_vec):
-    px, py, pz, vx, vy, vz, ax, ay, az = state_vec
-
-    speed = math.sqrt(vx*vx + vy*vy + vz*vz)
-    pos = math.sqrt(px*px + py*py + pz*pz)
-
-    analyser.est_d.append(speed)
-    analyser.obs_d.append(speed)
-
-    analyser.est_p.append(pos)
-    analyser.obs_p.append(pos)
-
-def load_state_json(path):
-    with open(path, "r") as f:
-        return json.load(f)
-
-def run_local_test():
-    analyser = ASAnalyzer()
-
-    init_analyser_buffers(analyser)
-
-    samples = load_state_json("assets/state_data.json")
-
-    for s in samples:
-        state_vec = [
-            s["px"], s["py"], s["pz"],
-            s["vx"], s["vy"], s["vz"],
-            s["ax"], s["ay"], s["az"],
-        ]
-
-        analyser.raw.append(state_vec)
-
-        if len(analyser.raw) > 1:
-            prev = analyser.raw[-2]
-            delta = [a - b for a, b in zip(state_vec, prev)]
-        else:
-            delta = [0.0] * len(state_vec)
-
-        analyser.delta.append(delta)
-
-        update_internal_states(analyser, state_vec)
-
-        if len(analyser.raw) >= WINDOW_SIZE:
-            feats = analyser.extract_window_features(WINDOW_SIZE)
-            print("Features:", feats)
-
+# v1.0.1
 
 def test_real_world_file(path):
     data = load_raw_file(path, delimiter=',')  # 🔑 A FUNÇÃO CERTA
@@ -99,10 +36,6 @@ def test_real_world_file(path):
     print("OK | windows:", len(features))
     print("Sample feature:", features[0])
 
-@app.get("/test")
-def analyse_window():
-    run_local_test()
-
 @app.get("/test2")
 def analyse_window():
     test_real_world_file("imu_as.txt")
@@ -110,76 +43,6 @@ def analyse_window():
 @app.get("/convert2")
 def analyse_window():
     process_imu_txt()
-
-class StateSample(BaseModel):
-    timestamp: int
-    ax: float
-    ay: float
-    az: float
-    vx: float
-    vy: float
-    vz: float
-    px: float
-    py: float
-    pz: float
-
-class WindowPayload(BaseModel):
-    samples: List[StateSample]
-
-@app.post("/analyse")
-def analyse_window(payload: WindowPayload):
-    samples_file = os.path.join(ASSETS_DIR, DEFAULT_TEST_FILE)
-
-    for s in payload.samples:
-        # 🔑 ORDEM IMPORTANTE
-        state_vec = [
-            s.px, s.py, s.pz,
-            s.vx, s.vy, s.vz,
-            s.ax, s.ay, s.az,
-        ]
-
-        analyser.raw.append(state_vec)
-
-        # delta (diferença entre estados)
-        if len(analyser.raw) > 1:
-            prev = analyser.raw[-2]
-            delta = [a - b for a, b in zip(state_vec, prev)]
-        else:
-            delta = [0.0] * len(state_vec)
-
-        analyser.delta.append(delta)
-
-    if len(analyser.raw) < 5:
-        return { "status": "waiting_for_more_data" }
-
-    features = analyser.extract_window_features(window_size=5)
-
-    return {
-        "status": "ok",
-        "features": features
-    }
-
-@app.get("/analyze-test")
-def analyze_fixed_file():
-    csv_path = os.path.join(ASSETS_DIR, DEFAULT_TEST_FILE)
-
-    if not os.path.exists(csv_path):
-        return {"error": f"File not found: {csv_path}"}
-    
-    features = service.test(csv_path)
-
-    # features, meta = service.extract_features_from_csv(csv_path)
-
-    # return {
-    #     "file": DEFAULT_TEST_FILE,
-    #     "windows": len(features),
-    #     "features": features,
-    #     "meta": meta,
-    # }
-
-
-@app.get("/convert")
-def convertJsonToTxt():
     INPUT_JSON = "assets/state_data.json"
     OUTPUT_TXT = "assets/state_data_converted.txt"
 
