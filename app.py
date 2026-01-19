@@ -23,6 +23,8 @@ analyser = ASAnalyzer()
 WINDOW_SIZE = 5
 WINDOW = 5
 
+# v1.0.0
+
 def init_analyser_buffers(analyser):
     analyser.raw = []
     analyser.delta = []
