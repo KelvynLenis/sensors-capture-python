@@ -3,7 +3,7 @@ import numpy as np
 # ==============================
 # CONFIGURAÇÃO
 # ==============================
-INPUT_FILE = "assets/imu_data.txt"
+INPUT_FILE = "dataset/imu_data.txt"
 OUTPUT_FILE = "imu_as.txt"
 
 WINDOW_SIZE = 32     # igual ao Java (ajustável)

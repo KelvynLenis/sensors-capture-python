@@ -9,7 +9,7 @@ from analyzer import AudioAnalyzerService
 
 app = FastAPI()
 service = AudioAnalyzerService()
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "dataset")
 DEFAULT_TEST_FILE = "state_data.json"
 
 app = FastAPI()
@@ -43,19 +43,3 @@ def analyse_window():
 @app.get("/convert2")
 def analyse_window():
     process_imu_txt()
-    INPUT_JSON = "assets/state_data.json"
-    OUTPUT_TXT = "assets/state_data_converted.txt"
-
-    FIELDS = [
-        "px", "py", "pz",
-        "vx", "vy", "vz",
-        "ax", "ay", "az"
-    ]
-
-    with open(INPUT_JSON, "r") as f:
-        samples = json.load(f)
-
-    with open(OUTPUT_TXT, "w") as f:
-        for s in samples:
-            row = [str(float(s[k])) for k in FIELDS]
-            f.write(",".join(row) + "\n")
