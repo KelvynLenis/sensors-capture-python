@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 import os
-import json
 from ASAnalyzer.utils import load_raw_file
 from imu_to_asanalyzer_txt import process_imu_txt
+from ws_server import imu_ws_endpoint
 
 from ASAnalyzer import ASAnalyzer
 from analyzer import AudioAnalyzerService
@@ -43,3 +43,11 @@ def analyse_window():
 @app.get("/convert2")
 def analyse_window():
     process_imu_txt()
+
+@app.get("/")
+def analyse_window():
+    print("OK")
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await imu_ws_endpoint(websocket)

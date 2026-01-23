@@ -67,6 +67,42 @@ def process_imu_txt():
 
     print(f"[OK] {OUTPUT_FILE} gerado | shape={frames.shape}")
 
+def process_imu_buffer(samples):
+    """
+    samples: List[List[float]] -> shape (N, 9)
+    """
+
+    samples = np.asarray(samples, dtype=float)
+
+    # pega somente aceleração
+    acc = samples[:, 6:9]  # ax, ay, az
+
+    acc_mag = np.linalg.norm(acc, axis=1)
+
+    frames = []
+
+    for i in range(0, len(acc_mag) - WINDOW_SIZE + 1, WINDOW_SIZE):
+        window = acc_mag[i:i + WINDOW_SIZE]
+
+        if np.std(window) < 1e-6:
+            continue
+
+        mag = np.abs(np.fft.rfft(window))
+
+        norm = np.linalg.norm(mag)
+        if norm == 0:
+            continue
+
+        frames.append(mag / norm)
+
+    if not frames:
+        return {"ok": False}
+
+    return {
+        "ok": True,
+        "windows": len(frames)
+    }
+
 # ==============================
 # EXECUÇÃO
 # ==============================
