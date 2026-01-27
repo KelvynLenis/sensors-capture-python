@@ -324,7 +324,7 @@ class ASAnalyzer:
         return np.average(self.est_v[-window_size:])
 
     def win_est_speed(self, window_size):
-        print("len(est_d):", len(self.est_d), "window_size:", window_size)
+        # print("len(est_d):", len(self.est_d), "window_size:", window_size)
         if len(self.est_d) < window_size:
             return 0.0  # ou np.nan
         return (self.est_d[-1] - self.est_d[-window_size]) / window_size
