@@ -18,7 +18,7 @@ async def imu_ws_endpoint(websocket: WebSocket):
 
             print("sample:", sample)
 
-            buffer.append(sample)
+            buffer.append(sample.get("data"))
 
             print("buffer len:", len(buffer))
 
