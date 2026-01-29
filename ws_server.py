@@ -113,8 +113,11 @@ async def imu_ws_endpoint2(websocket: WebSocket):
                     if len(buffer) > WINDOW + HOP_SIZE:
                         buffer = buffer[-(WINDOW + HOP_SIZE):]
 
-                print("OK | windows:", len(features))
-                print("Sample feature:", features)
+                if len(features) >= 50:
+                    features = features[-50:]
+
+                print("OK | Features:", len(features))
+                # print("Sample feature:", features)
 
                 await websocket.send_text(json.dumps({
                     "type": "result",
