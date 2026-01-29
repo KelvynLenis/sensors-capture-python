@@ -6,7 +6,7 @@ import numpy as np
 INPUT_FILE = "dataset/imu_data.txt"
 OUTPUT_FILE = "imu_as.txt"
 
-WINDOW_SIZE = 32     # igual ao Java (ajustável)
+WINDOW_SIZE = 32     
 FS = 50               # Hz (assumido fixo, sem timestamp)
 
 # ==============================
@@ -67,6 +67,50 @@ def process_imu_txt():
 
     print(f"[OK] {OUTPUT_FILE} gerado | shape={frames.shape}")
 
+
+def process_window2(data):
+    acc_mag = np.linalg.norm(data, axis=1)
+
+    if len(acc_mag) < WINDOW_SIZE:
+        return None
+
+    window = acc_mag[:WINDOW_SIZE]
+
+    # if np.std(window) < 1e-6:       # rejeição de silêncio
+    #     return None
+
+    mag = fft_magnitude(window)
+    norm = np.linalg.norm(mag)
+
+    if norm == 0:
+        return None
+
+    return mag / norm
+
+def process_window(data):
+    acc_mag = np.linalg.norm(data, axis=1)
+
+    frames = []
+
+    for i in range(0, len(acc_mag) - WINDOW_SIZE + 1, WINDOW_SIZE):
+        window = acc_mag[i:i + WINDOW_SIZE]
+
+        if np.std(window) < 1e-6:
+            continue
+
+        mag = fft_magnitude(window)
+
+        norm = np.linalg.norm(mag)
+        if norm == 0:
+            continue
+
+        frames.append(mag / norm)
+
+    if not frames:
+        return []
+
+    return np.array(frames)
+
 def process_imu_buffer(samples):
     """
     samples: List[List[float]] -> shape (N, 9)
@@ -102,9 +146,3 @@ def process_imu_buffer(samples):
         "ok": True,
         "windows": len(frames)
     }
-
-# ==============================
-# EXECUÇÃO
-# ==============================
-if __name__ == "__main__":
-    process_imu_txt()

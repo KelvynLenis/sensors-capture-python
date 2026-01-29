@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket
 import os
 from ASAnalyzer.utils import load_raw_file
 from imu_to_asanalyzer_txt import process_imu_txt
-from ws_server import imu_ws_endpoint
+from ws_server import imu_ws_endpoint, imu_ws_endpoint2
 
 from ASAnalyzer import ASAnalyzer
 from analyzer import AudioAnalyzerService
@@ -17,7 +17,7 @@ analyser = ASAnalyzer()
 
 WINDOW = 5
 
-# v1.0.1
+# v2.0.0-a
 
 def test_real_world_file(path):
     data = load_raw_file(path, delimiter=',')  # 🔑 A FUNÇÃO CERTA
@@ -50,4 +50,4 @@ def analyse_window():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await imu_ws_endpoint(websocket)
+    await imu_ws_endpoint2(websocket)
