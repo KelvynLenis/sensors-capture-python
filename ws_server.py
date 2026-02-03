@@ -113,16 +113,18 @@ async def imu_ws_endpoint2(websocket: WebSocket):
                     if len(buffer) > WINDOW + HOP_SIZE:
                         buffer = buffer[-(WINDOW + HOP_SIZE):]
 
-                if len(features) >= 50:
-                    features = features[-50:]
+                # if len(features) >= 50:
+                #     features = features[-50:]
 
                 print("OK | Features:", len(features))
-                # print("Sample feature:", features)
+                print("Sample feature:", features)
 
                 await websocket.send_text(json.dumps({
                     "type": "result",
                     "features": features
                 }))
+
+                features = []
 
     except WebSocketDisconnect:
         print("[WS] desconectado")
